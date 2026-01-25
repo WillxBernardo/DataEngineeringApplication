@@ -83,7 +83,6 @@ CREATE TABLE silver.fifa21_players (
     defending_stat INTEGER,
     physical INTEGER,
     hits INTEGER,
-    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ============================================================================
