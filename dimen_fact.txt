@@ -9,7 +9,6 @@ preferred_foot
 weak_foot
 skill_moves
 international_reputation
-created_at
 nationality
 
 
