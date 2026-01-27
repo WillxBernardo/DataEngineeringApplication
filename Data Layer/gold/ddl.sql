@@ -41,19 +41,11 @@ COMMENT ON COLUMN gold.dim_ply.preferred_foot IS 'Pé dominante do jogador';
 -- ============================================================================
 CREATE TABLE gold.dim_tm (
     tm_key SERIAL PRIMARY KEY,
-    team VARCHAR(100) NOT NULL,
-    contract_start_year INTEGER,
-    contract_end_year INTEGER,
-    joined_date DATE
+    team VARCHAR(100) NOT NULL
 );
-
-CREATE INDEX idx_tm_team ON gold.dim_tm(team);
-CREATE INDEX idx_tm_contract_years ON gold.dim_tm(contract_start_year, contract_end_year);
 
 COMMENT ON TABLE gold.dim_tm IS 'Dimensão Time - Informações contratuais e vínculo do jogador';
 COMMENT ON COLUMN gold.dim_tm.tm_key IS 'Chave primária surrogate';
-COMMENT ON COLUMN gold.dim_tm.contract_start_year IS 'Ano de início do contrato';
-COMMENT ON COLUMN gold.dim_tm.contract_end_year IS 'Ano de término do contrato';
 
 -- ============================================================================
 -- DIMENSION 3: POSIÇÃO
@@ -93,6 +85,11 @@ CREATE TABLE gold.fat_ply_stats (
     value_eur NUMERIC(12,2),
     wage_eur NUMERIC(10,2),
     release_clause_eur NUMERIC(12,2),
+
+    -- Contrato
+    contract_start_year INTEGER,
+    contract_end_year INTEGER,
+    joined_date DATE,
 
     -- Atributos Principais
     pace INTEGER,

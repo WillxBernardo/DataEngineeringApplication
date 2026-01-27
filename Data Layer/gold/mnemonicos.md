@@ -82,9 +82,6 @@ Este documento define todas as abreviações, convenções de nomenclatura e est
 |------|-----|-----------|
 | `tm_key` | SERIAL | Chave primária surrogate |
 | `team` | VARCHAR(100) | Nome do time |
-| `contract_start_year` | INTEGER | Ano de início do contrato |
-| `contract_end_year` | INTEGER | Ano de término do contrato |
-| `joined_date` | DATE | Data de entrada no time |
 
 ---
 
@@ -132,6 +129,15 @@ Este documento define todas as abreviações, convenções de nomenclatura e est
 | `release_clause_eur` | NUMERIC(12,2) | Cláusula de rescisão |
 
 ---
+
+---
+
+### Contrato
+| Coluna | Tipo | Descrição |
+|------|-----|-----------|
+| `contract_start_year` | INTEGER | Ano de início do contrato |
+| `contract_end_year` | INTEGER | Ano de término do contrato |
+| `joined_date` | DATE | Data de entrada no time |
 
 #### Atributos Principais
 
