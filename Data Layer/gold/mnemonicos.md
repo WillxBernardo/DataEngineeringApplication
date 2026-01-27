@@ -93,7 +93,6 @@ Este documento define todas as abreviações, convenções de nomenclatura e est
 | Coluna | Tipo | Descrição |
 |------|-----|-----------|
 | `pos_key` | SERIAL | Chave primária surrogate |
-| `position_id` | INTEGER | ID da posição |
 | `positions` | VARCHAR(50) | Posições possíveis |
 | `best_position` | VARCHAR(10) | Melhor posição |
 
