@@ -94,6 +94,3 @@ gk_handling
 gk_kicking
 gk_positioning
 gk_reflexes
-
-
-
