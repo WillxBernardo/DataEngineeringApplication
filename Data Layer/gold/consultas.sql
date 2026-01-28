@@ -19,8 +19,8 @@ SELECT
     COUNT(*) AS qtd_jogadores,
     ROUND(AVG(f.overall_rating), 2)   AS avg_overall,
     ROUND(AVG(f.potential_rating), 2) AS avg_potential
-FROM gold.fat_ply_stats f
-JOIN gold.dim_ply p ON p.ply_key = f.ply_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
 GROUP BY p.age
 ORDER BY p.age;
 
@@ -35,8 +35,8 @@ SELECT
     COUNT(*) AS total_players,
     ROUND(AVG(f.overall_rating), 2)   AS avg_overall,
     ROUND(AVG(f.potential_rating), 2) AS avg_potential
-FROM gold.fat_ply_stats f
-JOIN gold.dim_ply p ON p.ply_key = f.ply_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
 GROUP BY p.nationality
 HAVING COUNT(*) > 50
 ORDER BY avg_overall DESC;
@@ -56,8 +56,8 @@ SELECT
     COUNT(*) AS qtd_jogadores,
     ROUND(AVG(f.value_eur), 2) AS avg_value_eur,
     ROUND(AVG(f.wage_eur), 2)  AS avg_wage_eur
-FROM gold.fat_ply_stats f
-JOIN gold.dim_pos pos ON pos.pos_key = f.pos_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
 GROUP BY pos.best_position
 ORDER BY avg_value_eur DESC;
 
@@ -73,14 +73,14 @@ SELECT
     f.overall_rating,
     f.value_eur,
     f.wage_eur
-FROM gold.fat_ply_stats f
-JOIN gold.dim_ply p   ON p.ply_key = f.ply_srk
-JOIN gold.dim_pos pos ON pos.pos_key = f.pos_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_ply p   ON p.ply_key = f.ply_srk
+JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
 WHERE
     f.overall_rating >= 80
     AND f.value_eur < (
         SELECT AVG(value_eur)
-        FROM gold.fat_ply_stats
+        FROM dw.fat_ply_stats
         WHERE overall_rating >= 80
     )
 ORDER BY f.overall_rating DESC, f.value_eur ASC;
@@ -101,8 +101,8 @@ SELECT
     f.overall_rating,
     f.potential_rating,
     (f.potential_rating - f.overall_rating) AS growth
-FROM gold.fat_ply_stats f
-JOIN gold.dim_ply p ON p.ply_key = f.ply_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
 ORDER BY growth DESC
 LIMIT 20;
 
@@ -115,8 +115,8 @@ LIMIT 20;
 SELECT
     p.age,
     ROUND(AVG(f.potential_rating - f.overall_rating), 2) AS avg_growth
-FROM gold.fat_ply_stats f
-JOIN gold.dim_ply p ON p.ply_key = f.ply_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
 GROUP BY p.age
 ORDER BY p.age;
 
@@ -138,8 +138,8 @@ SELECT
     ROUND(AVG(f.dribbling_stat), 1)  AS avg_dribbling,
     ROUND(AVG(f.defending_stat), 1)  AS avg_defending,
     ROUND(AVG(f.physical), 1)        AS avg_physical
-FROM gold.fat_ply_stats f
-JOIN gold.dim_pos pos ON pos.pos_key = f.pos_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
 GROUP BY pos.best_position
 ORDER BY pos.best_position;
 
@@ -159,9 +159,9 @@ SELECT
     f.goalkeeping_total,
     f.gk_reflexes,
     f.gk_positioning
-FROM gold.fat_ply_stats f
-JOIN gold.dim_ply p   ON p.ply_key = f.ply_srk
-JOIN gold.dim_pos pos ON pos.pos_key = f.pos_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_ply p   ON p.ply_key = f.ply_srk
+JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
 WHERE pos.best_position = 'GK'
 ORDER BY f.overall_rating DESC
 LIMIT 15;
@@ -181,7 +181,7 @@ SELECT
     COUNT(*) AS qtd_jogadores,
     ROUND(AVG(f.overall_rating), 2) AS avg_overall,
     ROUND(SUM(f.value_eur), 2)      AS total_value_eur
-FROM gold.fat_ply_stats f
-JOIN gold.dim_tm t ON t.tm_key = f.tm_srk
+FROM dw.fat_ply_stats f
+JOIN dw.dim_tm t ON t.tm_key = f.tm_srk
 GROUP BY t.team
 ORDER BY avg_overall DESC;
