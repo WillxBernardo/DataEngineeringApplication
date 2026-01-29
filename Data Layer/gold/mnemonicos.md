@@ -1,274 +1,267 @@
-# Dicionário de Mnemônicos – Gold Layer (FIFA 21 Players)
+# Padronização de Nomenclatura (Mnemônicos) – FIFA 21
 
-Este documento define todas as abreviações, convenções de nomenclatura e estrutura do **Star Schema da camada Gold** para o dataset **FIFA 21 Players**.
-
----
-
-## 1. Abreviações de Tabelas
-
-| Abreviação | Significado | Tabela Completa |
-|-----------|-------------|-----------------|
-| `ply` | **Ply**ayer (Jogador) | `dim_ply` |
-| `tm` | **T**ea**m** (Time) | `dim_tm` |
-| `pos` | **Pos**ição | `dim_pos` |
-| `fts` | **F**a**t**o **S**tats | `fat_ply_stats` |
+Este documento define as regras estritas de abreviação (3 letras) aplicadas ao **Data Warehouse FIFA 21**, no schema `dw`, seguindo boas práticas de modelagem dimensional (Star Schema).
 
 ---
 
-## 2. Prefixos de Tabelas
+## 1. Tipos de Dados (Prefixos)
 
-| Prefixo | Significado | Exemplo |
-|--------|-------------|---------|
-| `dim_` | **Dim**ensão | `dim_ply`, `dim_tm`, `dim_pos` |
-| `fat_` | **F**ac**t** (tabela fato) | `fat_ply_stats` |
-| `vw_` | **V**ie**w** analítica | `vw_player_performance` |
-| `idx_` | Índice | `idx_ply_nationality` |
+Define o início do nome da coluna, indicando o tipo de dado armazenado.
 
----
-
-## 3. Sufixos de Chaves
-
-| Sufixo | Significado | Uso |
-|------|-------------|-----|
-| `_key` | **Key** – Chave primária surrogate | Dimensões |
-| `_srk` | **S**urrogate **R**eference **K**ey | FKs na tabela fato |
-
-**Exemplos:**
-- `ply_key` – PK da dimensão jogador  
-- `ply_srk` – FK na fato referenciando `dim_ply(ply_key)`
+| Mnemônico | Significado | Exemplo |
+| :--- | :--- | :--- |
+| **srk** | Surrogate Key (PK/FK) | `srk_ply` |
+| **cod** | Código Original | `cod_ply` |
+| **nom** | Nome / Descrição Curta | `nom_tim` |
+| **txt** | Texto Longo | `txt_nam_lng` |
+| **dat** | Data | `dat_joi` |
+| **num** | Número Inteiro / Métrica | `num_ovr` |
+| **vlr** | Valor Monetário | `vlr_mkt` |
 
 ---
 
-## 4. Abreviações de Colunas
+## 2. Entidades (Contexto Principal)
 
-| Abreviação | Significado |
-|-----------|-------------|
-| `nr` | Número |
-| `cm` | Centímetros |
-| `kg` | Quilogramas |
-| `eur` | Euro |
-| `gk` | Goalkeeper |
-| `att` | Attacking |
-| `def` | Defending |
+Define o assunto macro da tabela. Compõe o nome da tabela (`dim_XXX`, `fat_XXX`).
 
----
-
-## 5. Estrutura das Tabelas
+| Mnemônico | Significado | Contexto |
+| :--- | :--- | :--- |
+| **dw** | Data Warehouse | Schema |
+| **dim** | Dimensão | Tabela dimensão |
+| **fat** | Fato | Tabela Fato |
+| **ply** | Player | Jogador |
+| **tim** | Team | Time |
+| **pos** | Position | Posição |
+| **sts** | Status | Estado do jogador (contrato/time) |
 
 ---
 
-### 5.1 Dimensão Jogador (`dim_ply`)
+## 3. Qualificadores (Sufixos)
+
+Define o detalhe específico da coluna. Usado para completar o nome (`nom_XXX`, `num_XXX`).
+
+| Mnemônico | Significado | Exemplo |
+| :--- | :--- | :--- |
+| **lng** | Longo | `txt_nam_lng` |
+| **sht** | Curto | `nom_nam_sht` |
+| **age** | Idade | `num_age` |
+| **hgt** | Altura | `num_hgt` |
+| **wgt** | Peso | `num_wgt` |
+| **nat** | Nacionalidade | `nom_nat` |
+| **fot** | Pé Preferido | `nom_fot` |
+| **ovr** | Overall | `num_ovr` |
+| **pot** | Potencial | `num_pot` |
+| **bst** | Melhor | `num_bst_ovr` |
+| **gro** | Crescimento | `num_gro` |
+| **tot** | Total | `num_tot` |
+| **bas** | Base | `num_bas` |
+| **hit** | Popularidade | `num_hit` |
+| **mkt** | Mercado | `vlr_mkt` |
+| **wag** | Salário | `vlr_wag` |
+| **rel** | Rescisão | `vlr_rel` |
+| **joi** | Entrada (Join) | `dat_joi` |
+| **str** | Início | `num_str_yr` |
+| **end** | Fim | `num_end_yr` |
+
+### 3.1 Qualificadores de Grupos Técnicos (Atributos FIFA)
+
+ Mnemônico | Significado | Exemplo |
+| :--- | :--- | :--- |
+| **att** | Attacking | `num_att_fin` |
+| **skl** | Skill | `num_skl_dri` |
+| **mov** | Movement | `num_mov_acc` |
+| **pow** | Power | `num_pow_sht` |
+| **men** | Mentality | `num_men_vis` |
+| **def** | Defending | `num_def_sta` |
+| **gkp** | Goalkeeping | `num_gkp_ref` |
+
+## 4. Estrutura das Tabelas
+
+### 4.1 Dimensão Jogador (`dw.dim_ply`)
 
 | Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `ply_key` | SERIAL | Chave primária surrogate |
-| `player_id` | INTEGER | ID original do jogador |
-| `long_name` | TEXT | Nome completo |
-| `name` | VARCHAR(100) | Nome curto |
-| `age` | INTEGER | Idade |
-| `height_cm` | INTEGER | Altura em cm |
-| `weight_kg` | INTEGER | Peso em kg |
-| `preferred_foot` | VARCHAR(10) | Pé dominante |
-| `weak_foot` | INTEGER | Qualidade do pé fraco |
-| `skill_moves` | INTEGER | Nível de habilidade |
-| `international_reputation` | INTEGER | Reputação internacional |
-| `nationality` | VARCHAR(50) | Nacionalidade |
+| :--- | :--- | :--- |
+| `srk_ply` | INTEGER | Chave surrogate do jogador |
+| `cod_ply` | INTEGER | ID original do jogador |
+| `txt_nam_lng` | TEXT | Nome completo |
+| `nom_nam_sht` | VARCHAR(100) | Nome curto |
+| `num_age` | INTEGER | Idade |
+| `num_hgt` | INTEGER | Altura (cm) |
+| `num_wgt` | INTEGER | Peso (kg) |
+| `nom_fot` | VARCHAR(10) | Pé preferido |
+| `num_wkf` | INTEGER | Pé fraco |
+| `num_skm` | INTEGER | Skill moves |
+| `num_rep` | INTEGER | Reputação Internacional |
+| `nom_nat` | VARCHAR(50) | Nacionalidade |
 
 ---
 
-### 5.2 Dimensão Time (`dim_tm`)
+### 4.2 Dimensão Time (`dw.dim_tim`)
 
 | Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `tm_key` | SERIAL | Chave primária surrogate |
-| `team` | VARCHAR(100) | Nome do time |
+| :--- | :--- | :--- |
+| `srk_tim` | INTEGER | Chave surrogate do time |
+| `nom_tim` | VARCHAR(100) | Nome do time |
 
 ---
 
-### 5.3 Dimensão Posição (`dim_pos`)
+### 4.3 Dimensão Posição (`dw.dim_pos`)
 
 | Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `pos_key` | SERIAL | Chave primária surrogate |
-| `positions` | VARCHAR(50) | Posições possíveis |
-| `best_position` | VARCHAR(10) | Melhor posição |
+| :--- | :--- | :--- |
+| `srk_pos` | INTEGER | Chave surrogate da posição |
+| `nom_pos` | VARCHAR(50) | Posições possíveis |
+| `nom_pos_bst` | VARCHAR(10) | Melhor posição |
 
 ---
 
-### 5.4 Fato Status Player (`fat_ply_stats`)
+### 4.4 Fato Status do Jogador (`dw.fat_ply_sts`)
+
+Tabela que representa **o estado do jogador em um time**, incluindo métricas técnicas, financeiras e contratuais.
 
 | Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `fts_key` | SERIAL | Chave primária surrogate |
-| `ply_srk` | INTEGER | FK para `dim_ply` |
-| `tm_srk` | INTEGER | FK para `dim_tm` |
-| `pos_srk` | INTEGER | FK para `dim_pos` |
+| :--- | :--- | :--- |
+| `srk_ply_sts` | INTEGER | PK da tabela fato |
+| `srk_ply` | INTEGER | FK → dim_ply |
+| `srk_tim` | INTEGER | FK → dim_tim |
+| `srk_pos` | INTEGER | FK → dim_pos |
 
 ---
 
-#### Ratings Gerais
+#### Métricas Principais
 
-| Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `overall_rating` | INTEGER | Overall atual |
-| `potential_rating` | INTEGER | Potencial |
-| `best_overall_rating` | INTEGER | Melhor overall |
-| `growth` | INTEGER | Crescimento |
-| `total_stats` | INTEGER | Total de atributos |
-| `base_stats` | INTEGER | Base de atributos |
-| `hits` | INTEGER | Popularidade |
-
----
-
-#### Valores Financeiros
-
-| Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `value_eur` | NUMERIC(12,2) | Valor de mercado |
-| `wage_eur` | NUMERIC(10,2) | Salário |
-| `release_clause_eur` | NUMERIC(12,2) | Cláusula de rescisão |
+| Coluna | Descrição |
+| :--- | :--- |
+| `num_ovr` | Overall |
+| `num_pot` | Potencial |
+| `num_bst_ovr` | Melhor overall |
+| `num_gro` | Crescimento |
+| `num_tot` | Total de atributos |
+| `num_bas` | Base de atributos |
+| `num_hit` | Taxa de eficiência dos chutes a gol |
 
 ---
 
+#### Métricas Financeiras
+
+| Coluna | Descrição |
+| :--- | :--- |
+| `vlr_mkt` | Valor de mercado |
+| `vlr_wag` | Salário |
+| `vlr_rel` | Cláusula de rescisão |
+
 ---
 
-### Contrato
-| Coluna | Tipo | Descrição |
-|------|-----|-----------|
-| `contract_start_year` | INTEGER | Ano de início do contrato |
-| `contract_end_year` | INTEGER | Ano de término do contrato |
-| `joined_date` | DATE | Data de entrada no time |
+#### Informações Contratuais
+
+| Coluna | Descrição |
+| :--- | :--- |
+| `num_str_yr` | Ano início contrato |
+| `num_end_yr` | Ano fim contrato |
+| `dat_joi` | Data de entrada no time |
+
+---
 
 #### Atributos Principais
 
-| Coluna |
-|------|
-| `pace` |
-| `shooting` |
-| `passing` |
-| `dribbling_stat` |
-| `defending_stat` |
-| `physical` |
+| Coluna | Significado |
+|------|-----------|
+| `num_pac` | Pace |
+| `num_sho` | Shooting |
+| `num_pas` | Passing |
+| `num_dri` | Dribbling |
+| `num_def` | Defending |
+| `num_phy` | Physical |
 
 ---
 
-#### Grupos de Atributos
+### Attacking
 
-Os grupos seguem o padrão:
-- `<grupo>_total`
-- atributos individuais do grupo
-
-**Attacking**
-- `attacking_total`
-- `crossing`
-- `finishing`
-- `heading_accuracy`
-- `short_passing`
-- `volleys`
-
-**Skill**
-- `skill_total`
-- `dribbling`
-- `curve`
-- `fk_accuracy`
-- `long_passing`
-- `ball_control`
-
-**Movement**
-- `movement_total`
-- `acceleration`
-- `sprint_speed`
-- `agility`
-- `reactions`
-- `balance`
-
-**Power**
-- `power_total`
-- `shot_power`
-- `jumping`
-- `stamina`
-- `strength`
-- `long_shots`
-
-**Mentality**
-- `mentality_total`
-- `aggression`
-- `interceptions`
-- `positioning`
-- `vision`
-- `penalties`
-- `composure`
-
-**Defending**
-- `defending_total`
-- `marking`
-- `standing_tackle`
-- `sliding_tackle`
-
-**Goalkeeping**
-- `goalkeeping_total`
-- `gk_diving`
-- `gk_handling`
-- `gk_kicking`
-- `gk_positioning`
-- `gk_reflexes`
+| Coluna | Significado |
+|------|-----------|
+| `num_att_tot` | Attacking total |
+| `num_att_crs` | Crossing |
+| `num_att_fin` | Finishing |
+| `num_att_hed` | Heading accuracy |
+| `num_att_pas` | Short passing |
+| `num_att_vol` | Volleys |
 
 ---
 
-## 6. Views Analíticas
+### Skill
 
-| View | Descrição |
-|----|-----------|
-| `vw_player_overall` | Estatísticas gerais por jogador |
-| `vw_top_players` | Top jogadores por overall |
-| `vw_player_value` | Análise de valor vs performance |
-| `vw_team_strength` | Força agregada por time |
-| `vw_position_analysis` | Performance média por posição |
-
----
-
-## 7. Convenções Gerais
-
-1. **Snake_case** em todos os identificadores  
-2. **Português sem acentos** para colunas de negócio  
-3. **Inglês** para termos técnicos (`rating`, `overall`, `key`)  
-4. **Chaves surrogate** obrigatórias na Gold   
-6. **Dimensões com atributos descritivos**  
-7. **Valores monetários sempre em EUR**
+| Coluna | Significado |
+|------|-----------|
+| `num_skl_tot` | Skill total |
+| `num_skl_dri` | Dribbling |
+| `num_skl_cur` | Curve |
+| `num_skl_fka` | Free kick accuracy |
+| `num_skl_lps` | Long passing |
+| `num_skl_ctl` | Ball control |
 
 ---
 
-## 8. Diagrama do Star Schema
+### Movement
 
-        +-----------------------+          +-----------------------+
-        |       dim_ply         |          |        dim_tm         |
-        +-----------------------+          +-----------------------+
-        | plyr_key (PK)         |          | tm_key (PK)           |
-        | player_id             |          | team_id               |
-        | long_name             |          | team_name             |
-        | name                  |          | contract_period       |
-        | age                   |          | joined_date           |
-        | height_cm             |          +-----------+-----------+
-        | weight_kg             |                      |
-        | preferred_foot        |                      |
-        | nationality           |                      | tm_srk (FK)
-        +-----------+-----------+                      |
-                    |                                  v
-                    | ply _srk (FK)        +-----------------------+
-                    |                      |     ft_ply_stats      |
-                    +--------------------->+-----------------------+
-                                           | fts_key (PK)          |
-        +-----------------------+          | plyr_srk (FK)         |
-        |       dim_pos         |          | tm_srk (FK)           |
-        +-----------------------+          | pos_srk (FK)          |
-        | pos_key (PK)          |          |-----------------------|
-        | position_id           |          | overall_rating        |
-        | positions             |          | potential_rating      |
-        | best_position         |          | value_eur             |
-        +-----------+-----------+          | wage_eur              |
-                    |                      | release_clause_eur    |
-                    | pos_srk (FK)         |-----------------------|
-                    +--------------------->| pace, shooting        |
-                                           | passing, dribbling    |
-                                           | defending, physical   |
-                                           +-----------------------+
+| Coluna | Significado |
+|------|-----------|
+| `num_mov_tot` | Movement total |
+| `num_mov_acc` | Acceleration |
+| `num_mov_spr` | Sprint speed |
+| `num_mov_agi` | Agility |
+| `num_mov_rea` | Reactions |
+| `num_mov_bal` | Balance |
+
+---
+
+### Power
+
+| Coluna | Significado |
+|------|-----------|
+| `num_pow_tot` | Power total |
+| `num_pow_sht` | Shot power |
+| `num_pow_jmp` | Jumping |
+| `num_pow_sta` | Stamina |
+| `num_pow_str` | Strength |
+| `num_pow_lsh` | Long shots |
+
+---
+
+### Mentality
+
+
+| Coluna | Significado |
+|------|-----------|
+| `num_men_tot` | Mentality total |
+| `num_men_agg` | Aggression |
+| `num_men_int` | Interceptions |
+| `num_men_pos` | Positioning |
+| `num_men_vis` | Vision |
+| `num_men_pen` | Penalties |
+| `num_men_cmp` | Composure |
+
+---
+
+### Defending
+
+| Coluna | Significado |
+|------|-----------|
+| `num_def_tot` | Defending total |
+| `num_def_mrk` | Marking |
+| `num_def_sta` | Standing tackle |
+| `num_def_slt` | Sliding tackle |
+
+---
+
+### Goalkeeping
+
+| Coluna | Significado |
+|------|-----------|
+| `num_gkp_tot` | Goalkeeping total |
+| `num_gkp_div` | Diving |
+| `num_gkp_han` | Handling |
+| `num_gkp_kic` | Kicking |
+| `num_gkp_pos` | Positioning |
+| `num_gkp_ref` | Reflexes |
+
+
