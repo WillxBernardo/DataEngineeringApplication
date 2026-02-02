@@ -12,14 +12,14 @@
 -- Jogadores mais velhos ainda performam bem? Existe um pico de performance?
 -- --------------------------------------------------------------------------
 SELECT
-    p.age,
+    p.num_age,
     COUNT(*) AS qtd_jogadores,
-    ROUND(AVG(f.overall_rating), 2)   AS avg_overall,
-    ROUND(AVG(f.potential_rating), 2) AS avg_potential
-FROM dw.fat_ply_stats f
-JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
-GROUP BY p.age
-ORDER BY p.age;
+    ROUND(AVG(f.num_ovr), 2) AS avg_overall,
+    ROUND(AVG(f.num_pot), 2) AS avg_potential
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+GROUP BY p.num_age
+ORDER BY p.num_age;
 
 
 -- --------------------------------------------------------------------------
@@ -28,12 +28,12 @@ ORDER BY p.age;
 -- Quais países produzem mais jogadores e com melhor nível técnico?
 -- --------------------------------------------------------------------------
 SELECT
-    p.nationality,
+    p.nom_nat,
     COUNT(*) AS total_players,
-    ROUND(AVG(f.overall_rating), 2) AS avg_overall
-FROM dw.fat_ply_stats f
-JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
-GROUP BY p.nationality
+    ROUND(AVG(f.num_ovr), 2) AS avg_overall
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+GROUP BY p.nom_nat
 HAVING COUNT(*) > 50
 ORDER BY avg_overall DESC;
 
@@ -44,13 +44,14 @@ ORDER BY avg_overall DESC;
 -- Quais posições são mais valorizadas financeiramente?
 -- --------------------------------------------------------------------------
 SELECT
-    pos.best_position,
+    pos.nom_pos_bst,
     COUNT(*) AS qtd_jogadores,
-    ROUND(AVG(f.value_eur), 2) AS avg_value_eur
-FROM dw.fat_ply_stats f
-JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
-GROUP BY pos.best_position
-ORDER BY avg_value_eur DESC;
+    ROUND(AVG(f.vlr_mkt), 2) AS avg_valor_mercado
+FROM dw.fat_ply_sts f
+JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
+GROUP BY pos.nom_pos_bst
+ORDER BY avg_valor_mercado DESC;
+
 
 
 -- --------------------------------------------------------------------------
@@ -59,21 +60,21 @@ ORDER BY avg_value_eur DESC;
 -- Quais jogadores entregam alta performance por um custo abaixo do mercado?
 -- --------------------------------------------------------------------------
 SELECT
-    p.name,
-    pos.best_position,
-    f.overall_rating,
-    f.value_eur
-FROM dw.fat_ply_stats f
-JOIN dw.dim_ply p   ON p.ply_key = f.ply_srk
-JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
+    p.nom_nam_sht,
+    pos.nom_pos_bst,
+    f.num_ovr,
+    f.vlr_mkt
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p   ON p.srk_ply = f.srk_ply
+JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
 WHERE
-    f.overall_rating >= 80
-    AND f.value_eur < (
-        SELECT AVG(value_eur)
-        FROM dw.fat_ply_stats
-        WHERE overall_rating >= 80
+    f.num_ovr >= 80
+    AND f.vlr_mkt < (
+        SELECT AVG(vlr_mkt)
+        FROM dw.fat_ply_sts
+        WHERE num_ovr >= 80
     )
-ORDER BY f.overall_rating DESC, f.value_eur ASC;
+ORDER BY f.num_ovr DESC, f.vlr_mkt ASC;
 
 
 -- --------------------------------------------------------------------------
@@ -82,14 +83,14 @@ ORDER BY f.overall_rating DESC, f.value_eur ASC;
 -- Quem são os jogadores que mais podem evoluir no futuro?
 -- --------------------------------------------------------------------------
 SELECT
-    p.name,
-    p.age,
-    f.overall_rating,
-    f.potential_rating,
-    (f.potential_rating - f.overall_rating) AS growth
-FROM dw.fat_ply_stats f
-JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
-ORDER BY growth DESC
+    p.nom_nam_sht,
+    p.num_age,
+    f.num_ovr,
+    f.num_pot,
+    f.num_gro AS crescimento
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+ORDER BY crescimento DESC
 LIMIT 20;
 
 
@@ -99,12 +100,12 @@ LIMIT 20;
 -- Em qual faixa etária os jogadores evoluem mais?
 -- --------------------------------------------------------------------------
 SELECT
-    p.age,
-    ROUND(AVG(f.potential_rating - f.overall_rating), 2) AS avg_growth
-FROM dw.fat_ply_stats f
-JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
-GROUP BY p.age
-ORDER BY p.age;
+    p.num_age,
+    ROUND(AVG(f.num_gro), 2) AS avg_crescimento
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+GROUP BY p.num_age
+ORDER BY p.num_age;
 
 
 -- --------------------------------------------------------------------------
@@ -113,15 +114,15 @@ ORDER BY p.age;
 -- Quais atributos técnicos caracterizam cada posição?
 -- --------------------------------------------------------------------------
 SELECT
-    pos.best_position,
-    ROUND(AVG(f.pace), 1)       AS avg_pace,
-    ROUND(AVG(f.shooting), 1)   AS avg_shooting,
-    ROUND(AVG(f.passing), 1)    AS avg_passing,
-    ROUND(AVG(f.defending_stat), 1) AS avg_defending
-FROM dw.fat_ply_stats f
-JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
-GROUP BY pos.best_position
-ORDER BY pos.best_position;
+    pos.nom_pos_bst,
+    ROUND(AVG(f.num_pac), 1) AS avg_pace,
+    ROUND(AVG(f.num_sho), 1) AS avg_shooting,
+    ROUND(AVG(f.num_pas), 1) AS avg_passing,
+    ROUND(AVG(f.num_def), 1) AS avg_defending
+FROM dw.fat_ply_sts f
+JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
+GROUP BY pos.nom_pos_bst
+ORDER BY pos.nom_pos_bst;
 
 
 -- --------------------------------------------------------------------------
@@ -130,14 +131,14 @@ ORDER BY pos.best_position;
 -- Quem são os melhores goleiros considerando performance geral?
 -- --------------------------------------------------------------------------
 SELECT
-    p.name,
-    f.overall_rating,
-    f.goalkeeping_total
-FROM dw.fat_ply_stats f
-JOIN dw.dim_ply p   ON p.ply_key = f.ply_srk
-JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
-WHERE pos.best_position = 'GK '
-ORDER BY f.overall_rating DESC
+    p.nom_nam_sht,
+    f.num_ovr,
+    f.num_gkp_tot
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p   ON p.srk_ply = f.srk_ply
+JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
+WHERE pos.nom_pos_bst = 'GK '
+ORDER BY f.num_ovr DESC
 LIMIT 15;
 
 
@@ -147,12 +148,12 @@ LIMIT 15;
 -- Quais times possuem os elencos mais fortes?
 -- --------------------------------------------------------------------------
 SELECT
-    t.team,
+    t.nom_tim,
     COUNT(*) AS qtd_jogadores,
-    ROUND(AVG(f.overall_rating), 2) AS avg_overall
-FROM dw.fat_ply_stats f
-JOIN dw.dim_tm t ON t.tm_key = f.tm_srk
-GROUP BY t.team
+    ROUND(AVG(f.num_ovr), 2) AS avg_overall
+FROM dw.fat_ply_sts f
+JOIN dw.dim_tim t ON t.srk_tim = f.srk_tim
+GROUP BY t.nom_tim
 ORDER BY avg_overall DESC;
 
 
@@ -162,12 +163,12 @@ ORDER BY avg_overall DESC;
 -- Quais times concentram maior valor de mercado em seus elencos?
 -- --------------------------------------------------------------------------
 SELECT
-    t.team,
-    ROUND(SUM(f.value_eur), 2) AS total_value_eur
-FROM dw.fat_ply_stats f
-JOIN dw.dim_tm t ON t.tm_key = f.tm_srk
-GROUP BY t.team
-ORDER BY total_value_eur DESC;
+    t.nom_tim,
+    ROUND(SUM(f.vlr_mkt), 2) AS total_valor_mercado
+FROM dw.fat_ply_sts f
+JOIN dw.dim_tim t ON t.srk_tim = f.srk_tim
+GROUP BY t.nom_tim
+ORDER BY total_valor_mercado DESC;
 
 
 
@@ -182,24 +183,24 @@ ORDER BY total_value_eur DESC;
 -- Pergunta de negócio:
 -- Quais jogadores performam acima da média da sua posição?
 -- --------------------------------------------------------------------------
-WITH avg_position_overall AS (
+WITH avg_pos_ovr AS (
     SELECT
-        pos_srk,
-        AVG(overall_rating) AS avg_overall_position
-    FROM dw.fat_ply_stats
-    GROUP BY pos_srk
+        srk_pos,
+        AVG(num_ovr) AS avg_ovr_pos
+    FROM dw.fat_ply_sts
+    GROUP BY srk_pos
 )
 SELECT
-    p.name,
-    pos.best_position,
-    f.overall_rating,
-    a.avg_overall_position
-FROM dw.fat_ply_stats f
-JOIN avg_position_overall a ON a.pos_srk = f.pos_srk
-JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
-JOIN dw.dim_pos pos ON pos.pos_key = f.pos_srk
-WHERE f.overall_rating > a.avg_overall_position
-ORDER BY f.overall_rating DESC;
+    p.nom_nam_sht,
+    pos.nom_pos_bst,
+    f.num_ovr,
+    a.avg_ovr_pos
+FROM dw.fat_ply_sts f
+JOIN avg_pos_ovr a ON a.srk_pos = f.srk_pos
+JOIN dw.dim_ply p  ON p.srk_ply = f.srk_ply
+JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
+WHERE f.num_ovr > a.avg_ovr_pos
+ORDER BY f.num_ovr DESC;
 
 
 -- --------------------------------------------------------------------------
@@ -207,20 +208,20 @@ ORDER BY f.overall_rating DESC;
 -- Pergunta de negócio:
 -- Quais times investem melhor em jovens talentos?
 -- --------------------------------------------------------------------------
-WITH young_high_potential AS (
+WITH young_potential AS (
     SELECT
-        tm_srk,
+        f.srk_tim,
         COUNT(*) AS qtd_jogadores,
-        AVG(potential_rating) AS avg_potential
-    FROM dw.fat_ply_stats f
-    JOIN dw.dim_ply p ON p.ply_key = f.ply_srk
-    WHERE p.age <= 23
-    GROUP BY tm_srk
+        AVG(f.num_pot) AS avg_potencial
+    FROM dw.fat_ply_sts f
+    JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+    WHERE p.num_age <= 23
+    GROUP BY f.srk_tim
 )
 SELECT
-    t.team,
+    t.nom_tim,
     y.qtd_jogadores,
-    ROUND(y.avg_potential, 2) AS avg_potential
-FROM young_high_potential y
-JOIN dw.dim_tm t ON t.tm_key = y.tm_srk
-ORDER BY avg_potential DESC;
+    ROUND(y.avg_potencial, 2) AS avg_potencial
+FROM young_potential y
+JOIN dw.dim_tim t ON t.srk_tim = y.srk_tim
+ORDER BY avg_potencial DESC;
