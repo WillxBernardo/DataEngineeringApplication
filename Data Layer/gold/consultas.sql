@@ -7,221 +7,218 @@
 
 
 -- --------------------------------------------------------------------------
--- 1. Distribuição de idade vs performance
+-- 1. Custo-benefício dos jogadores (Overall x Valor de Mercado)
 -- Pergunta de negócio:
--- Jogadores mais velhos ainda performam bem? Existe um pico de performance?
+-- Quais jogadores entregam maior overall pagando menos no mercado?
+-- Ideal para encontrar barganhas competitivas.
+-- --------------------------------------------------------------------------
+SELECT
+    p.nom_nam_sht,
+    t.nom_tim,
+    p.num_age,
+    f.num_ovr,
+    f.vlr_mkt,
+    ROUND(f.vlr_mkt / NULLIF(f.num_ovr, 0), 2) AS vlr_por_ovr
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p ON f.srk_ply = p.srk_ply
+JOIN dw.dim_tim t ON f.srk_tim = t.srk_tim
+WHERE f.vlr_mkt IS NOT NULL;
+
+
+-- --------------------------------------------------------------------------
+-- 2. Top 10 times com maior overall médio
+-- Pergunta de negócio:
+-- Quais clubes possuem elencos mais fortes em média?
+-- --------------------------------------------------------------------------
+SELECT
+    t.nom_tim,
+    ROUND(AVG(f.num_ovr), 2) AS avg_ovr
+FROM dw.fat_ply_sts f
+JOIN dw.dim_tim t ON f.srk_tim = t.srk_tim
+GROUP BY t.nom_tim
+ORDER BY avg_ovr DESC
+LIMIT 10;
+
+
+-- --------------------------------------------------------------------------
+-- 3. Top 10 elencos mais caros
+-- Pergunta de negócio:
+-- Quais times concentram maior valor financeiro em seus jogadores?
+-- --------------------------------------------------------------------------
+SELECT
+    t.nom_tim,
+    SUM(f.vlr_mkt) AS vlr_total_elenco
+FROM dw.fat_ply_sts f
+JOIN dw.dim_tim t ON f.srk_tim = t.srk_tim
+GROUP BY t.nom_tim
+ORDER BY vlr_total_elenco DESC
+LIMIT 10;
+
+
+-- --------------------------------------------------------------------------
+-- 4. Top 10 batedores de pênalti
+-- Pergunta de negócio:
+-- Quais jogadores possuem os melhores atributos de cobrança de pênalti
+-- --------------------------------------------------------------------------
+SELECT
+    p.nom_nam_sht AS nom_jogador,
+    f.num_men_pen AS num_penalties
+FROM dw.fat_ply_sts f
+JOIN dw.dim_ply p ON f.srk_ply = p.srk_ply
+JOIN dw.dim_tim t ON f.srk_tim = t.srk_tim
+WHERE f.num_men_pen IS NOT NULL
+ORDER BY f.num_men_pen DESC
+LIMIT 10;
+
+-- --------------------------------------------------------------------------
+-- 5. Relação entre idade e performance média
+-- Pergunta de negócio:
+-- Existe uma idade em que os jogadores performam melhor em média?
 -- --------------------------------------------------------------------------
 SELECT
     p.num_age,
     COUNT(*) AS qtd_jogadores,
-    ROUND(AVG(f.num_ovr), 2) AS avg_overall,
-    ROUND(AVG(f.num_pot), 2) AS avg_potential
+    ROUND(AVG(f.num_ovr), 2) AS avg_ovr
 FROM dw.fat_ply_sts f
-JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+JOIN dw.dim_ply p ON f.srk_ply = p.srk_ply
 GROUP BY p.num_age
 ORDER BY p.num_age;
 
-
 -- --------------------------------------------------------------------------
--- 2. Nacionalidades com maior volume e qualidade média
+-- 6. Top 10 nacionalidades com melhores dribladores
 -- Pergunta de negócio:
--- Quais países produzem mais jogadores e com melhor nível técnico?
+-- Quais nacionalidades concentram jogadores com maior habilidade de driblar
 -- --------------------------------------------------------------------------
 SELECT
-    p.nom_nat,
-    COUNT(*) AS total_players,
-    ROUND(AVG(f.num_ovr), 2) AS avg_overall
+    p.nom_nat                    AS nom_nacionalidade,
+    ROUND(AVG(f.num_skl_dri), 2) AS avg_drible,
+    COUNT(*)                     AS qtd_jogadores
 FROM dw.fat_ply_sts f
-JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
+JOIN dw.dim_ply p ON f.srk_ply = p.srk_ply
+WHERE f.num_skl_dri IS NOT NULL
 GROUP BY p.nom_nat
-HAVING COUNT(*) > 50
-ORDER BY avg_overall DESC;
+HAVING COUNT(*) >= 5
+ORDER BY avg_drible DESC
+LIMIT 10;
 
 
 -- --------------------------------------------------------------------------
--- 3. Valor médio de mercado por posição
+-- 7. Alta aceleração e baixa stamina
 -- Pergunta de negócio:
--- Quais posições são mais valorizadas financeiramente?
--- --------------------------------------------------------------------------
-SELECT
-    pos.nom_pos_bst,
-    COUNT(*) AS qtd_jogadores,
-    ROUND(AVG(f.vlr_mkt), 2) AS avg_valor_mercado
-FROM dw.fat_ply_sts f
-JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
-GROUP BY pos.nom_pos_bst
-ORDER BY avg_valor_mercado DESC;
-
-
-
--- --------------------------------------------------------------------------
--- 4. Jogadores subvalorizados (alto overall, baixo valor)
--- Pergunta de negócio:
--- Quais jogadores entregam alta performance por um custo abaixo do mercado?
+-- Quais jogadores são explosivos, mas se cansam rapidamente?
 -- --------------------------------------------------------------------------
 SELECT
     p.nom_nam_sht,
-    pos.nom_pos_bst,
-    f.num_ovr,
-    f.vlr_mkt
+    f.num_mov_acc,
+    f.num_pow_sta
 FROM dw.fat_ply_sts f
-JOIN dw.dim_ply p   ON p.srk_ply = f.srk_ply
-JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
-WHERE
-    f.num_ovr >= 80
-    AND f.vlr_mkt < (
-        SELECT AVG(vlr_mkt)
-        FROM dw.fat_ply_sts
-        WHERE num_ovr >= 80
-    )
-ORDER BY f.num_ovr DESC, f.vlr_mkt ASC;
+JOIN dw.dim_ply p ON f.srk_ply = p.srk_ply
+WHERE f.num_mov_acc >= 85
+  AND f.num_pow_sta <= 60;
 
 
 -- --------------------------------------------------------------------------
--- 5. Jogadores com maior potencial de crescimento
+-- 8. Top 10 goleiros por overall
 -- Pergunta de negócio:
--- Quem são os jogadores que mais podem evoluir no futuro?
+-- Quais são os melhores goleiros disponíveis no jogo?
 -- --------------------------------------------------------------------------
 SELECT
     p.nom_nam_sht,
-    p.num_age,
-    f.num_ovr,
-    f.num_pot,
-    f.num_gro AS crescimento
+    f.num_ovr
 FROM dw.fat_ply_sts f
-JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
-ORDER BY crescimento DESC
-LIMIT 20;
-
-
--- --------------------------------------------------------------------------
--- 6. Crescimento médio por idade
--- Pergunta de negócio:
--- Em qual faixa etária os jogadores evoluem mais?
--- --------------------------------------------------------------------------
-SELECT
-    p.num_age,
-    ROUND(AVG(f.num_gro), 2) AS avg_crescimento
-FROM dw.fat_ply_sts f
-JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
-GROUP BY p.num_age
-ORDER BY p.num_age;
-
-
--- --------------------------------------------------------------------------
--- 7. Perfil técnico médio por posição
--- Pergunta de negócio:
--- Quais atributos técnicos caracterizam cada posição?
--- --------------------------------------------------------------------------
-SELECT
-    pos.nom_pos_bst,
-    ROUND(AVG(f.num_pac), 1) AS avg_pace,
-    ROUND(AVG(f.num_sho), 1) AS avg_shooting,
-    ROUND(AVG(f.num_pas), 1) AS avg_passing,
-    ROUND(AVG(f.num_def), 1) AS avg_defending
-FROM dw.fat_ply_sts f
-JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
-GROUP BY pos.nom_pos_bst
-ORDER BY pos.nom_pos_bst;
-
-
--- --------------------------------------------------------------------------
--- 8. Ranking de goleiros por overall
--- Pergunta de negócio:
--- Quem são os melhores goleiros considerando performance geral?
--- --------------------------------------------------------------------------
-SELECT
-    p.nom_nam_sht,
-    f.num_ovr,
-    f.num_gkp_tot
-FROM dw.fat_ply_sts f
-JOIN dw.dim_ply p   ON p.srk_ply = f.srk_ply
-JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
+JOIN dw.dim_ply p ON f.srk_ply = p.srk_ply
+JOIN dw.dim_pos pos ON f.srk_pos = pos.srk_pos
 WHERE pos.nom_pos_bst = 'GK '
 ORDER BY f.num_ovr DESC
-LIMIT 15;
+LIMIT 10;
 
 
 -- --------------------------------------------------------------------------
--- 9. Qualidade média do elenco por time
+-- 9. Média salarial por posição
 -- Pergunta de negócio:
--- Quais times possuem os elencos mais fortes?
+-- Quais posições recebem os maiores salários em média?
 -- --------------------------------------------------------------------------
 SELECT
-    t.nom_tim,
-    COUNT(*) AS qtd_jogadores,
-    ROUND(AVG(f.num_ovr), 2) AS avg_overall
-FROM dw.fat_ply_sts f
-JOIN dw.dim_tim t ON t.srk_tim = f.srk_tim
-GROUP BY t.nom_tim
-ORDER BY avg_overall DESC;
-
-
--- --------------------------------------------------------------------------
--- 10. Times mais valiosos financeiramente
--- Pergunta de negócio:
--- Quais times concentram maior valor de mercado em seus elencos?
--- --------------------------------------------------------------------------
-SELECT
-    t.nom_tim,
-    ROUND(SUM(f.vlr_mkt), 2) AS total_valor_mercado
-FROM dw.fat_ply_sts f
-JOIN dw.dim_tim t ON t.srk_tim = f.srk_tim
-GROUP BY t.nom_tim
-ORDER BY total_valor_mercado DESC;
-
-
-
--- ============================================================================
--- CONSULTAS ANALÍTICAS UTILIZANDO CTE (WITH)
--- TOTAL: 2
--- ============================================================================
-
-
--- --------------------------------------------------------------------------
--- 11. (CTE) Ranking de jogadores acima da média da posição
--- Pergunta de negócio:
--- Quais jogadores performam acima da média da sua posição?
--- --------------------------------------------------------------------------
-WITH avg_pos_ovr AS (
-    SELECT
-        srk_pos,
-        AVG(num_ovr) AS avg_ovr_pos
-    FROM dw.fat_ply_sts
-    GROUP BY srk_pos
-)
-SELECT
-    p.nom_nam_sht,
     pos.nom_pos_bst,
-    f.num_ovr,
-    a.avg_ovr_pos
+    ROUND(AVG(f.vlr_wag), 2) AS avg_salario
 FROM dw.fat_ply_sts f
-JOIN avg_pos_ovr a ON a.srk_pos = f.srk_pos
-JOIN dw.dim_ply p  ON p.srk_ply = f.srk_ply
-JOIN dw.dim_pos pos ON pos.srk_pos = f.srk_pos
-WHERE f.num_ovr > a.avg_ovr_pos
-ORDER BY f.num_ovr DESC;
+JOIN dw.dim_pos pos ON f.srk_pos = pos.srk_pos
+GROUP BY pos.nom_pos_bst;
 
 
 -- --------------------------------------------------------------------------
--- 12. (CTE) Times com jogadores jovens e alto potencial
+-- 10. Distribuição de jogadores por posição
 -- Pergunta de negócio:
--- Quais times investem melhor em jovens talentos?
+-- Como os jogadores estão distribuídos entre as posições do jogo?
 -- --------------------------------------------------------------------------
-WITH young_potential AS (
+SELECT
+    pos.nom_pos_bst,
+    COUNT(*) AS qtd_jogadores
+FROM dw.fat_ply_sts f
+JOIN dw.dim_pos pos ON f.srk_pos = pos.srk_pos
+GROUP BY pos.nom_pos_bst;
+
+
+-- --------------------------------------------------------------------------
+-- 11 (CTE). Times com melhor desempenho defensivo coletivo
+-- Pergunta de negócio:
+-- Quais times possuem o melhor desempenho defensivo médio, considerando
+-- atributos defensivos e físicos de seus jogadores?
+-- --------------------------------------------------------------------------
+WITH defesa_jogador AS (
     SELECT
         f.srk_tim,
-        COUNT(*) AS qtd_jogadores,
-        AVG(f.num_pot) AS avg_potencial
+        (
+            f.num_def_tot +
+            f.num_def_mrk +
+            f.num_def_sta +
+            f.num_def_slt +
+            f.num_phy
+        ) / 5.0 AS scr_def_jogador
     FROM dw.fat_ply_sts f
-    JOIN dw.dim_ply p ON p.srk_ply = f.srk_ply
-    WHERE p.num_age <= 23
-    GROUP BY f.srk_tim
+),
+defesa_time AS (
+    SELECT
+        t.nom_tim,
+        AVG(d.scr_def_jogador) AS avg_defesa_time
+    FROM defesa_jogador d
+    JOIN dw.dim_tim t ON d.srk_tim = t.srk_tim
+    GROUP BY t.nom_tim
 )
 SELECT
-    t.nom_tim,
-    y.qtd_jogadores,
-    ROUND(y.avg_potencial, 2) AS avg_potencial
-FROM young_potential y
-JOIN dw.dim_tim t ON t.srk_tim = y.srk_tim
-ORDER BY avg_potencial DESC;
+    nom_tim,
+    ROUND(avg_defesa_time, 2) AS avg_defesa_time
+FROM defesa_time
+ORDER BY avg_defesa_time DESC;
+
+-- --------------------------------------------------------------------------
+-- 12. (CTE) . Dependência salarial em relação ao desempenho
+-- Pergunta de negócio:
+-- Quais times apresentam maior dependência salarial em relação ao desempenho
+-- técnico de seus jogadores, considerando salário total e overall médio?
+-- --------------------------------------------------------------------------
+
+WITH cte_salario_desempenho AS (
+    SELECT
+        t.nom_tim,
+        SUM(f.vlr_wag) AS vlr_salario_total,
+        AVG(f.num_ovr) AS avg_overall
+    FROM dw.fat_ply_sts f
+    JOIN dw.dim_tim t ON f.srk_tim = t.srk_tim
+    GROUP BY t.nom_tim
+),
+cte_dependencia AS (
+    SELECT
+        nom_tim,
+        vlr_salario_total,
+        avg_overall,
+        vlr_salario_total / NULLIF(avg_overall, 0) AS idx_dependencia_salarial
+    FROM cte_salario_desempenho
+)
+SELECT
+    nom_tim,
+    ROUND(vlr_salario_total, 2) AS vlr_salario_total,
+    ROUND(avg_overall, 2)       AS avg_overall,
+    ROUND(idx_dependencia_salarial, 2) AS idx_dependencia_salarial
+FROM cte_dependencia
+ORDER BY idx_dependencia_salarial DESC;
